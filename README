@@ -1,0 +1,12 @@
+Gop, an Ultra Scalable Web-Server.
+
+* FastCGI Support (PLANNED)
+* SCGI Support (PLANNED)
+* memcached Support (PLANNED)
+* Varnish Bits Integration (PLANNED)
+
+Gop is based on I/O Event Notification facilities like epoll on Linux, kqueue on BSD,MacOS X, /dev/poll on Solaris.
+
+Planning.
+
+Stage 1: Implement Server with epoll.
