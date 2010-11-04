@@ -27,10 +27,10 @@ server_t * gop_init(int argc,char ** argv) {
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = 0;
 	hints.ai_flags = 0;
-	if(argv[1] == NULL)
+	if(NULL == argv[1])
 		return NULL;
 
-	g = getaddrinfo("192.168.10.100",argv[1],&hints,&res0);
+	g = getaddrinfo(NULL,argv[1],&hints,&res0);
 	if(g) {
 		fprintf(stderr,"%s\n",gai_strerror(g));
 		return NULL;
