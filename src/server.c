@@ -42,6 +42,7 @@ server_t * gop_init(int argc,char ** argv) {
 		sfd = socket(res->ai_family,res->ai_socktype,res->ai_protocol);
 		if(sfd == -1) {
 			perror("gop_init -> socket()");
+			continue;
 		}
 
 		if(bind(sfd,res->ai_addr,res->ai_addrlen) == 0) {
@@ -53,7 +54,7 @@ server_t * gop_init(int argc,char ** argv) {
 		close(sfd);
 	}
 
-	if(res == NULL) {
+	if(NULL == res) {
 		fprintf(stderr,"cannot bind()\n");
 		return NULL;
 	}
