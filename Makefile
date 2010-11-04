@@ -4,7 +4,6 @@ all:
 	for A in $(DIRS); do $(MAKE) -C $$A; done
 
 clean:	
-	rm -f src/Gop
-	rm -f src/*.o
+	for A in $(DIRS); do $(MAKE) -C $$A clean; done
 
 .PHONY: all clean

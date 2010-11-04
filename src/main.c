@@ -7,7 +7,7 @@ int main(int argc,char * argv[]) {
 
 	server = gop_init(argc,argv);
 
-	if(NULL != server) {
+	if(server) {
 		gop_serve_forever(server);
 		gop_cleanup(server);
 		return 0;

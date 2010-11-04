@@ -19,7 +19,7 @@ server_t * gop_init(int argc,char ** argv) {
 	server_t * s;
 	
 	s = (server_t *)malloc(sizeof(server_t));
-	if(NULL == s)
+	if(!s)
 		return NULL;
 	
 	memset(&hints,0,sizeof(struct addrinfo));
@@ -27,7 +27,7 @@ server_t * gop_init(int argc,char ** argv) {
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = 0;
 	hints.ai_flags = 0;
-	if(NULL == argv[1])
+	if(!argv[1])
 		return NULL;
 
 	g = getaddrinfo(NULL,argv[1],&hints,&res0);
@@ -54,7 +54,7 @@ server_t * gop_init(int argc,char ** argv) {
 		close(sfd);
 	}
 
-	if(NULL == res) {
+	if(!res) {
 		fprintf(stderr,"cannot bind()\n");
 		return NULL;
 	}
@@ -98,12 +98,12 @@ void gop_serve_forever(server_t * s) {
 	get_max_fds(&max_fds);
 
 #ifdef DEBUG
-	fprintf(stderr,"%u",max_fds);
+	fprintf(stderr,"Max allowed FD's: %u\n",max_fds);
 #endif
 
 	events = (struct epoll_event *)calloc(max_fds,sizeof(struct epoll_event));
 
-	if(NULL == events) 
+	if(!events) 
 		return;
 	
 	for(;;) {
