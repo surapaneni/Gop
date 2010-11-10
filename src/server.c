@@ -139,9 +139,10 @@ void gop_serve_forever(server_t * s) {
 					fprintf(stderr,"Will write(2) to client\n");
 #endif
 					
-					/* The following can be used as an example as to where we are going with.
-					 * char reply[] = "HTTP/1.1 204 OK\r\nConnection: close\r\nContent-Length: 0\r\n\r\n";
-					 * write(events[i].data.fd,reply,strlen(reply)); */
+					// The following can be used as an example as to where we are going with.
+					 char reply[] = "HTTP/1.1 204 OK\r\nConnection: close\r\nContent-Length: 0\r\n\r\n";
+					 write(events[i].data.fd,reply,strlen(reply));
+					 //*/
 				} 
 				if(events[i].events & EPOLLIN) {
 #ifdef DEBUG
