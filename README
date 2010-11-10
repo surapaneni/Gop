@@ -9,4 +9,5 @@ Gop is based on I/O Event Notification facilities like epoll on Linux, kqueue on
 
 Planning.
 
-Stage 1: Implement Server with epoll.
+Stage 1: Implement Server with epoll. ( Completed )
+Stage 2: Write HTTP Parser
