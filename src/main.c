@@ -3,13 +3,13 @@
 #include "server.h"
 
 int main(int argc,char * argv[]) {
-	server_t * server;
+	server_t * gop_handle;
 
-	server = gop_init(argc,argv);
+	gop_handle = gop_init(argc,argv);
 
-	if(server) {
-		gop_serve_forever(server);
-		gop_cleanup(server);
+	if(gop_handle) {
+		gop_serve_forever(gop_handle);
+		gop_cleanup(gop_handle);
 		return 0;
 	}
 	return 1;
