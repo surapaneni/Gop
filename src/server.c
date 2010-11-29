@@ -9,6 +9,7 @@
 #include <string.h>
 #include <sys/epoll.h>
 
+#include "http_parse.h"
 #include "server.h"
 #include "util.h"
 
@@ -133,6 +134,14 @@ void gop_serve_forever(server_t * s) {
 					continue;
 				}
 			} else {
+				if(events[i].events & EPOLLIN) {
+#ifdef DEBUG
+					fprintf(stderr,"Will read(2) from client\n");
+#endif
+					char request[HTTP_MAX_HEADER_SIZE];
+					read(events[i].data.fd,request,HTTP_MAX_HEADER_SIZE);
+					fprintf(stdout,"%s",request);
+				}
 				if(events[i].events & EPOLLOUT) {
 					// cli-sock available for write.
 #ifdef DEBUG
@@ -143,14 +152,6 @@ void gop_serve_forever(server_t * s) {
 					 char reply[] = "HTTP/1.1 204 OK\r\nConnection: close\r\nContent-Length: 0\r\n\r\n";
 					 write(events[i].data.fd,reply,strlen(reply));
 					 //*/
-				} 
-				if(events[i].events & EPOLLIN) {
-#ifdef DEBUG
-					fprintf(stderr,"Will read(2) from client\n");
-#endif
-					char request[255];
-					read(events[i].data.fd,request,255);
-					fprintf(stdout,"%s",request);
 				}
 				if(events[i].events & ( EPOLLHUP | EPOLLERR )) {
 #ifdef DEBUG
