@@ -13,12 +13,14 @@
 #include "server.h"
 #include "util.h"
 
+
 server_t * gop_init(int argc,char ** argv) {
 	int g;
 	struct addrinfo hints,*res0,*res;
 	struct epoll_event server_event;
 	server_t * s;
-	
+	char * port;
+
 	s = (server_t *)malloc(sizeof(server_t));
 	if(!s)
 		return NULL;
@@ -30,8 +32,11 @@ server_t * gop_init(int argc,char ** argv) {
 	hints.ai_flags = 0;
 	if(!argv[1])
 		return NULL;
-
-	g = getaddrinfo(NULL,argv[1],&hints,&res0);
+	if(argv[2])
+		port = argv[2];
+	else
+		port = "8080";
+	g = getaddrinfo(argv[1],port,&hints,&res0);
 	if(g) {
 		fprintf(stderr,"%s\n",gai_strerror(g));
 		return NULL;
@@ -140,7 +145,7 @@ void gop_serve_forever(server_t * s) {
 #endif
 					char request[HTTP_MAX_HEADER_SIZE];
 					read(events[i].data.fd,request,HTTP_MAX_HEADER_SIZE);
-					fprintf(stdout,"%s",request);
+					fprintf(stdout,"Read: %s",request);
 				}
 				if(events[i].events & EPOLLOUT) {
 					// cli-sock available for write.
@@ -149,8 +154,9 @@ void gop_serve_forever(server_t * s) {
 #endif
 					
 					// The following can be used as an example as to where we are going with.
-					 char reply[] = "HTTP/1.1 204 OK\r\nConnection: close\r\nContent-Length: 0\r\n\r\n";
-					 write(events[i].data.fd,reply,strlen(reply));
+					char reply[] = "HTTP/1.1 204 OK\r\nConnection: close\r\nContent-Length: 0\r\n\r\n";
+					write(events[i].data.fd,reply,strlen(reply));
+					fprintf(stdout,"Wrote: %s",reply);
 					 //*/
 				}
 				if(events[i].events & ( EPOLLHUP | EPOLLERR )) {
