@@ -140,23 +140,25 @@ void gop_serve_forever(server_t * s) {
 				}
 			} else {
 				if(events[i].events & EPOLLIN) {
-#ifdef DEBUG
-					fprintf(stderr,"Will read(2) from client\n");
-#endif
 					char request[HTTP_MAX_HEADER_SIZE];
-					read(events[i].data.fd,request,HTTP_MAX_HEADER_SIZE);
-					fprintf(stdout,"Read: %s",request);
+					int rv = read(events[i].data.fd,request,HTTP_MAX_HEADER_SIZE);
+					if(rv < 0)
+						perror("gop_serve_forever -> read");
+#ifdef VERBOSE_DEBUG
+					else
+						fprintf(stdout,"Read: %s",request);
+#endif
 				}
 				if(events[i].events & EPOLLOUT) {
-					// cli-sock available for write.
-#ifdef DEBUG
-					fprintf(stderr,"Will write(2) to client\n");
-#endif
-					
 					// The following can be used as an example as to where we are going with.
 					char reply[] = "HTTP/1.1 204 OK\r\nConnection: close\r\nContent-Length: 0\r\n\r\n";
-					write(events[i].data.fd,reply,strlen(reply));
-					fprintf(stdout,"Wrote: %s",reply);
+					int rv = write(events[i].data.fd,reply,strlen(reply));
+					if(rv < 0)
+						perror("gop_serve_forever -> write");
+#ifdef VERBOSE_DEBUG
+					else
+						fprintf(stdout,"Wrote: %s",reply);
+#endif
 					 //*/
 				}
 				if(events[i].events & ( EPOLLHUP | EPOLLERR )) {
