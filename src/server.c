@@ -9,6 +9,7 @@
 #include <string.h>
 #include <sys/epoll.h>
 
+#include "event.h"
 #include "http_parse.h"
 #include "server.h"
 #include "util.h"
@@ -122,24 +123,10 @@ void gop_serve_forever(server_t * s) {
 		for(int i=0; i< nfds; i++) {
 			if(events[i].data.fd == s->sockfd) {
 				//Server Sock available for read
-				struct sockaddr client;
-				socklen_t cli_sock_len = sizeof(struct sockaddr);
-				int cli_sock = accept(s->sockfd,&client,&cli_sock_len);
-				
-				if(cli_sock < 0) {
-					perror("gop_serve_forever -> accept()");
-					continue;
-				}
-				
-				set_nonblock(cli_sock);
-				ev.events = EPOLLIN | EPOLLOUT | EPOLLET;
-				ev.data.fd = cli_sock;
-				if( -1 == epoll_ctl(s->efd,EPOLL_CTL_ADD,cli_sock,&ev)) {
-					perror("gop_serve_forever -> epoll_ctl()");
-					continue;
-				}
+				//Accept a new client and add it to epoll
+				event_register_new(s->efd, &ev, s->sockfd);
 			} else {
-				if(events[i].events & EPOLLIN) {
+				if(events[i].events & ( EPOLLIN | EPOLLOUT)) {
 					char request[HTTP_MAX_HEADER_SIZE];
 					int rv = read(events[i].data.fd,request,HTTP_MAX_HEADER_SIZE);
 					if(rv < 0)
@@ -148,24 +135,21 @@ void gop_serve_forever(server_t * s) {
 					else
 						fprintf(stdout,"Read: %s",request);
 #endif
-				}
-				if(events[i].events & EPOLLOUT) {
 					// The following can be used as an example as to where we are going with.
 					char reply[] = "HTTP/1.1 204 OK\r\nConnection: close\r\nContent-Length: 0\r\n\r\n";
-					int rv = write(events[i].data.fd,reply,strlen(reply));
+					rv = write(events[i].data.fd,reply,strlen(reply));
 					if(rv < 0)
 						perror("gop_serve_forever -> write");
 #ifdef VERBOSE_DEBUG
 					else
 						fprintf(stdout,"Wrote: %s",reply);
 #endif
-					 //*/
 				}
 				if(events[i].events & ( EPOLLHUP | EPOLLERR )) {
 #ifdef DEBUG
 					fprintf(stderr,"Will close(2) client\n");
 #endif
-					epoll_ctl(s->efd,EPOLL_CTL_DEL,events[i].data.fd,NULL);
+					event_deregister(s->efd,events[i].data.fd);
 					close(events[i].data.fd);
 				}
 			}
@@ -174,8 +158,4 @@ void gop_serve_forever(server_t * s) {
 
 	free(events);
 	return ;
-}
-
-int set_nonblock(int fd) {
-	return fcntl(fd,F_SETFD,O_NONBLOCK);
 }
