@@ -10,13 +10,13 @@
 #include <sys/epoll.h>
 
 #include "event.h"
-#include "http_parse.h"
 #include "server.h"
 #include "util.h"
-
+#include "http_parser.h"
+#include "http_action.h"
 
 server_t * gop_init(int argc,char ** argv) {
-	int g;
+	int g,reuse_addr = 1;
 	struct addrinfo hints,*res0,*res;
 	struct epoll_event server_event;
 	server_t * s;
@@ -51,7 +51,7 @@ server_t * gop_init(int argc,char ** argv) {
 			perror("gop_init -> socket()");
 			continue;
 		}
-
+		setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr));
 		if(bind(sfd,res->ai_addr,res->ai_addrlen) == 0) {
 			s->addr = res;
 			s->sockfd = sfd;
@@ -127,6 +127,13 @@ void gop_serve_forever(server_t * s) {
 				event_register_new(s->efd, &ev, s->sockfd);
 			} else {
 				if(events[i].events & ( EPOLLIN | EPOLLOUT)) {
+					http_parser_settings settings;
+					memset(&settings,0,sizeof(http_parser_settings));
+					//settings.on_header_field = on_header_field;
+					settings.on_body = on_body;
+					http_parser *parser = (http_parser *)malloc(sizeof(http_parser));
+					http_parser_init(parser, HTTP_REQUEST);
+					parser->data = (int*)&(events[i].data.fd);
 					char request[HTTP_MAX_HEADER_SIZE];
 					int rv = read(events[i].data.fd,request,HTTP_MAX_HEADER_SIZE);
 					if(rv < 0)
@@ -135,6 +142,7 @@ void gop_serve_forever(server_t * s) {
 					else
 						fprintf(stdout,"Read: %s",request);
 #endif
+					http_parser_execute(parser,&settings,request,rv);
 					// The following can be used as an example as to where we are going with.
 					char reply[] = "HTTP/1.1 204 OK\r\nConnection: close\r\nContent-Length: 0\r\n\r\n";
 					rv = write(events[i].data.fd,reply,strlen(reply));
@@ -144,6 +152,7 @@ void gop_serve_forever(server_t * s) {
 					else
 						fprintf(stdout,"Wrote: %s",reply);
 #endif
+					free(parser);
 				}
 				if(events[i].events & ( EPOLLHUP | EPOLLERR )) {
 #ifdef DEBUG
