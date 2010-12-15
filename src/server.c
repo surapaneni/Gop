@@ -12,8 +12,7 @@
 #include "event.h"
 #include "server.h"
 #include "util.h"
-#include "http_parser.h"
-#include "http_action.h"
+#include "http_handle.h"
 
 server_t * gop_init(int argc,char ** argv) {
 	int g,reuse_addr = 1;
@@ -127,39 +126,7 @@ void gop_serve_forever(server_t * s) {
 				event_register_new(s->efd, &ev, s->sockfd);
 			} else {
 				if(events[i].events & ( EPOLLIN | EPOLLOUT)) {
-					http_parser_settings settings;
-					memset(&settings,0,sizeof(http_parser_settings));
-					settings.on_header_field = on_header_field;
-					settings.on_header_value = on_header_value;
-					http_parser *parser = (http_parser *)malloc(sizeof(http_parser));
-					http_parser_init(parser, HTTP_REQUEST);
-					parser->data = (int*)&(events[i].data.fd);
-					char request[HTTP_MAX_HEADER_SIZE];
-					int rv = read(events[i].data.fd,request,HTTP_MAX_HEADER_SIZE);
-					if(rv < 0)
-						perror("gop_serve_forever -> read");
-#ifdef VERBOSE_DEBUG
-					else
-						fprintf(stdout,"Read: %s",request);
-#endif
-					http_parser_execute(parser,&settings,request,rv);
-					// The following can be used as an example as to where we are going with.
-					char reply[] = "HTTP/1.1 204 OK\r\nConnection: close\r\nContent-Length: 0\r\n\r\n";
-					rv = write(events[i].data.fd,reply,strlen(reply));
-					if(rv < 0) {
-						if( errno == EPIPE ) {
-#ifdef VERBOSE_DEBUG
-						perror("gop_serve_forever -> write");
-#endif
-						event_deregister(s->efd,events[i].data.fd);
-						close(events[i].data.fd);
-						}
-					}
-#ifdef VERBOSE_DEBUG
-					else
-						fprintf(stdout,"Wrote: %s",reply);
-#endif
-					free(parser);
+					handle_request_response(s->efd, events[i].data.fd);
 				}
 				if(events[i].events & ( EPOLLHUP | EPOLLERR )) {
 #ifdef DEBUG
