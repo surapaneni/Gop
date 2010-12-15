@@ -1,7 +1,7 @@
 SRC= main.c server.c util.c event.c http_parser.c http_action.c
 
 CC=	gcc
-CFLAGS+= -O0 -g -std=gnu99 -Wall -Werror -D_POSIX_C_SOURCE=1 -I.
+CFLAGS+= -O0 -g -std=gnu99 -Wall -Werror -D_POSIX_C_SOURCE=1 -I. -lefence
 
 all:	clean Gop tags
 

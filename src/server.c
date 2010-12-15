@@ -129,8 +129,8 @@ void gop_serve_forever(server_t * s) {
 				if(events[i].events & ( EPOLLIN | EPOLLOUT)) {
 					http_parser_settings settings;
 					memset(&settings,0,sizeof(http_parser_settings));
-					//settings.on_header_field = on_header_field;
-					settings.on_body = on_body;
+					settings.on_header_field = on_header_field;
+					settings.on_header_value = on_header_value;
 					http_parser *parser = (http_parser *)malloc(sizeof(http_parser));
 					http_parser_init(parser, HTTP_REQUEST);
 					parser->data = (int*)&(events[i].data.fd);
@@ -146,8 +146,15 @@ void gop_serve_forever(server_t * s) {
 					// The following can be used as an example as to where we are going with.
 					char reply[] = "HTTP/1.1 204 OK\r\nConnection: close\r\nContent-Length: 0\r\n\r\n";
 					rv = write(events[i].data.fd,reply,strlen(reply));
-					if(rv < 0)
+					if(rv < 0) {
+						if( errno == EPIPE ) {
+#ifdef VERBOSE_DEBUG
 						perror("gop_serve_forever -> write");
+#endif
+						event_deregister(s->efd,events[i].data.fd);
+						close(events[i].data.fd);
+						}
+					}
 #ifdef VERBOSE_DEBUG
 					else
 						fprintf(stdout,"Wrote: %s",reply);
