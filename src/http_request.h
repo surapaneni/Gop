@@ -14,7 +14,7 @@ struct http_header {
 typedef struct http_header http_header_t;
 
 struct http_header_list {
-	struct http_header *head, *tail;
+	struct http_header **head, **tail;
 };
 
 typedef struct http_header_list http_header_list_t;
@@ -34,6 +34,7 @@ struct http_request {
 
 typedef struct http_request http_request_t;
 
-int header_push(http_request_t * req, http_header_t * hdr);
+void request_push_field(http_header_list_t * list, const char * buf, size_t len);
+void request_push_value(http_header_list_t * list, const char * buf, size_t len);
 void request_free(http_request_t * req);
 #endif

@@ -20,6 +20,7 @@ int handle_request_response(int efd, int fd) {
 	settings.on_header_value = on_header_value;
 	//settings.on_url = on_url;
 	//settings.on_path = on_path;
+	settings.on_headers_complete = on_headers_complete;
 	settings.on_message_complete = on_message_complete;
 	
 	http_parser * parser = (http_parser *)malloc(sizeof(http_parser));
@@ -38,7 +39,9 @@ int handle_request_response(int efd, int fd) {
 	}
 
 	http_parser_execute(parser, &settings, request_buf, rv);
-	
+
+	char reply[] = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 14\r\n\r\nPrudhvi Krishna Surapaneni";
+	rv = write(fd,reply,strlen(reply));
 	free(parser);
 	return 1;
 }
