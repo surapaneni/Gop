@@ -14,7 +14,7 @@ struct http_header {
 typedef struct http_header http_header_t;
 
 struct http_header_list {
-	struct http_header **head, **tail;
+	struct http_header *head, *tail;
 };
 
 typedef struct http_header_list http_header_list_t;
